@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 
-const API = process.env.API;
-const DOMAIN = process.env.DOMAIN;
+const API = process.env.NEXT_PUBLIC_API;
+const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN;
 
 function randomName() {
   const adj = ["quick", "dark", "cool", "fast", "neat", "wild", "bold", "slim"];

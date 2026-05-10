@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TempMail.art
+
+<div align="center">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" />
+  <br/>
+  <p>A modern, high-performance temporary email service built with Next.js.</p>
+  <a href="https://temp-mail-ten.vercel.app"><strong>View Live Demo</strong></a>
+</div>
+
+---
+
+## Overview
+
+TempMail.art is a minimal, privacy-focused web application that provides instant disposable email addresses. Designed to protect primary inboxes from spam, it features a real-time polling mechanism and a premium dark-themed interface.
+
+## Key Features
+
+- **Instant Generation**: Create unique, disposable email addresses on demand.
+- **Real-time Synchronization**: Automatic inbox polling (every 5 seconds) for seamless email reception.
+- **Smart Parsing**: Robust MIME/Multipart parsing to extract plain text cleanly.
+- **Modern Interface**: Premium dark UI constructed with a focus on typography and responsive design.
+- **Privacy Centric**: Operates without registration or persistent data collection.
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Vanilla CSS (Custom design system)
+- **State Management**: React Hooks
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18.x or newer
+- npm, yarn, or pnpm
+
+### Installation
+
+1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/duongstark/temp-mail.git
+cd temp-mail
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Environment Setup
+Create a `.env` file in the root directory:
+```env
+NEXT_PUBLIC_DOMAIN="yourdomain.com"
+NEXT_PUBLIC_API="https://your-api-endpoint.com"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run the development server
+```bash
+npm run dev
+```
 
-## Learn More
+Navigate to `http://localhost:3000` to view the application.
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The application relies on Next.js Client Components to manage state and periodic polling. It interfaces with a backend API (e.g. Cloudflare Workers) to fetch incoming emails. Environment variables are strictly prefixed with `NEXT_PUBLIC_` to ensure availability within the browser bundle.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

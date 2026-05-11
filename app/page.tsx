@@ -95,12 +95,42 @@ export default function TempMail() {
 
   useEffect(() => {
     if (!username) return;
+
     fetchInbox();
-    intervalRef.current = setInterval(() => fetchInbox(true), 5000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+
+    const startPolling = () => {
+      if (!intervalRef.current) {
+        intervalRef.current = setInterval(() => fetchInbox(true), 10000);
+      }
     };
-  }, [username]);
+
+    const stopPolling = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+
+    if (document.visibilityState === "visible") {
+      startPolling();
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchInbox(true); // Cập nhật ngay khi người dùng quay lại tab
+        startPolling();
+      } else {
+        stopPolling(); // Dừng gọi API khi chuyển sang tab khác
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [username, fetchInbox]);
 
   const copy = () => {
     navigator.clipboard.writeText(fullEmail);
@@ -362,7 +392,7 @@ export default function TempMail() {
               Inbox is empty
               <br />
               <span style={{ fontSize: 12, color: "#333" }}>
-                Auto-refreshing every 5 seconds...
+                Auto-refreshing every 10 seconds...
               </span>
             </div>
           </div>

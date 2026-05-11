@@ -250,7 +250,11 @@ export default function TempMail() {
               <input
                 value={username}
                 onChange={(e) => {
-                  setUsername(e.target.value.toLowerCase().replace(/\s/g, ""));
+                  let val = e.target.value.toLowerCase().replace(/\s/g, "");
+                  if (val.includes("@")) {
+                    val = val.split("@")[0];
+                  }
+                  setUsername(val);
                   setEmails([]);
                   prevCountRef.current = 0;
                 }}

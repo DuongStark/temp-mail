@@ -120,25 +120,7 @@ export default function TempMail() {
 
   const parseBody = (raw: string) => {
     if (!raw) return "(không có nội dung)";
-    // Nếu là dạng multipart/MIME, cố gắng lấy nội dung text/plain
-    if (raw.includes("Content-Type: text/plain")) {
-      const parts = raw.split(/--[\w\d]+/);
-      for (const part of parts) {
-        if (part.includes("Content-Type: text/plain")) {
-          // Xóa các headers trong multipart part (bất kể xuống dòng hay dính liền)
-          return part
-            .replace(/Content-Type:\s*text\/plain(;\s*)?/i, "")
-            .replace(/charset=["']?[\w-]*["']?\s*/i, "")
-            .replace(/Content-Transfer-Encoding:\s*[\w-]+\s*/i, "")
-            .trim();
-        }
-      }
-    }
-    // Lọc bớt header nếu parse fail
-    return raw
-      .replace(/--[\w\d]+/g, "")
-      .replace(/Content-Type:\s*.*?(?=\s|$)/gi, "")
-      .trim();
+    return raw;
   };
 
   return (

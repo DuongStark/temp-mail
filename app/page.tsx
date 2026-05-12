@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 
 const API = process.env.NEXT_PUBLIC_API;
 const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN;
@@ -19,7 +20,7 @@ interface Email {
   date: string;
 }
 
-export default function TempMail() {
+function TempMailInner() {
   const [username, setUsername] = useState("");
   const [emails, setEmails] = useState<Email[]>([]);
   const [selected, setSelected] = useState<Email | null>(null);
@@ -150,7 +151,30 @@ export default function TempMail() {
 
   const parseBody = (raw: string) => {
     if (!raw) return "(không có nội dung)";
-    return raw;
+    // Nếu là dạng multipart/MIME, cố gắng lấy nội dung text/plain
+    if (raw.includes("Content-Type: text/plain")) {
+      const parts = raw.split(/--[\w\d]+/);
+      for (const part of parts) {
+        if (part.includes("Content-Type: text/plain")) {
+          return part
+            .replace(/Content-Type:\s*text\/plain(;\s*)?/i, "")
+            .replace(/charset=["']?[\w-]*["']?\s*/i, "")
+            .replace(/Content-Transfer-Encoding:\s*[\w-]+\s*/i, "")
+            .trim();
+        }
+      }
+    }
+    // Loại bỏ khoảng trắng thừa và dòng trống liên tiếp
+    return raw
+      .replace(/--[\w\d]+/g, "")
+      .replace(/Content-Type:\s*.*?(?=\s|$)/gi, "")
+      .replace(/\r\n/g, "\n")
+      .replace(/[ \t]+/g, " ")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line, i, arr) => !(line === "" && arr[i - 1] === ""))
+      .join("\n")
+      .trim();
   };
 
   return (
@@ -525,3 +549,5 @@ export default function TempMail() {
     </div>
   );
 }
+
+export default dynamic(() => Promise.resolve(TempMailInner), { ssr: false });

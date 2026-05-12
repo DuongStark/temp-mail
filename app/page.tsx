@@ -28,10 +28,15 @@ function TempMailInner() {
   const [copied, setCopied] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [newCount, setNewCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevCountRef = useRef(0);
 
   const fullEmail = `${username}@${DOMAIN}`;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const generate = () => {
     setUsername(randomName());
@@ -72,7 +77,6 @@ function TempMailInner() {
 
   const handleSelect = async (e: Email) => {
     setSelected(e);
-    // Nếu object lấy từ list /inbox chưa có nội dung, load lại từ endpoint /message
     if (!e.body) {
       try {
         const res = await fetch(
@@ -81,7 +85,6 @@ function TempMailInner() {
         if (res.ok) {
           const data = await res.json();
           setSelected(data);
-          // Update vào list để nhớ lần sau click
           setEmails((prev) =>
             prev.map((item) =>
               item.id === e.id ? { ...item, body: data.body } : item,
@@ -118,10 +121,10 @@ function TempMailInner() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        fetchInbox(true); // Cập nhật ngay khi người dùng quay lại tab
+        fetchInbox(true);
         startPolling();
       } else {
-        stopPolling(); // Dừng gọi API khi chuyển sang tab khác
+        stopPolling();
       }
     };
 
@@ -150,8 +153,7 @@ function TempMailInner() {
   };
 
   const parseBody = (raw: string) => {
-    if (!raw) return "(không có nội dung)";
-    // Nếu là dạng multipart/MIME, cố gắng lấy nội dung text/plain
+    if (!raw) return "(no content)";
     if (raw.includes("Content-Type: text/plain")) {
       const parts = raw.split(/--[\w\d]+/);
       for (const part of parts) {
@@ -164,7 +166,6 @@ function TempMailInner() {
         }
       }
     }
-    // Loại bỏ khoảng trắng thừa và dòng trống liên tiếp
     return raw
       .replace(/--[\w\d]+/g, "")
       .replace(/Content-Type:\s*.*?(?=\s|$)/gi, "")
@@ -177,374 +178,241 @@ function TempMailInner() {
       .trim();
   };
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#0a0a0f",
-        color: "#e8e8f0",
-        fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-      }}
-    >
-      {/* Google Font */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@400;600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #111; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-        @keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-        .email-row:hover { background: #16161f !important; cursor: pointer; }
-        .btn:hover { opacity: 0.85; transform: translateY(-1px); }
-        .btn { transition: all 0.15s ease; cursor: pointer; }
-      `}</style>
+  if (!mounted) return null;
 
-      {/* Header */}
-      <div
-        style={{
-          borderBottom: "1px solid #1e1e2e",
-          padding: "16px 32px",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          background: "#0d0d14",
-        }}
-      >
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-[#050508]">
+      {/* Animated gradient mesh background */}
+      <div className="fixed inset-0 pointer-events-none">
         <div
+          className="absolute w-[600px] h-[600px] rounded-full opacity-20 blur-[120px]"
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            background: "linear-gradient(135deg, #7c3aed, #2563eb)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 16,
+            background: "radial-gradient(circle, #7c3aed 0%, transparent 70%)",
+            top: "-10%",
+            left: "-5%",
+            animation: "meshMove 20s ease-in-out infinite",
           }}
-        >
-          ✉
-        </div>
-        <span
-          style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontWeight: 700,
-            fontSize: 18,
-            letterSpacing: "-0.5px",
-          }}
-        >
-          TempMail<span style={{ color: "#7c3aed" }}>.art</span>
-        </span>
-        <span
-          style={{
-            marginLeft: "auto",
-            fontSize: 11,
-            color: "#444",
-            fontFamily: "monospace",
-          }}
-        >
-          {lastRefresh
-            ? `synced ${timeAgo(lastRefresh.toISOString())}`
-            : "waiting..."}
-        </span>
+        />
         <div
+          className="absolute w-[500px] h-[500px] rounded-full opacity-15 blur-[100px]"
           style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            background: loading ? "#facc15" : "#22c55e",
-            animation: loading ? "pulse 1s infinite" : "none",
+            background: "radial-gradient(circle, #2563eb 0%, transparent 70%)",
+            top: "40%",
+            right: "-10%",
+            animation: "meshMove2 25s ease-in-out infinite",
+          }}
+        />
+        <div
+          className="absolute w-[400px] h-[400px] rounded-full opacity-10 blur-[80px]"
+          style={{
+            background: "radial-gradient(circle, #14b8a6 0%, transparent 70%)",
+            bottom: "-5%",
+            left: "30%",
+            animation: "meshMove3 22s ease-in-out infinite",
           }}
         />
       </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-        {/* Email bar */}
-        <div
-          style={{
-            background: "#0d0d14",
-            border: "1px solid #1e1e2e",
-            borderRadius: 12,
-            padding: "20px 24px",
-            marginBottom: 24,
-            animation: "fadeIn 0.3s ease",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              color: "#555",
-              marginBottom: 10,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-            }}
-          >
-            Your temporary inbox
-          </div>
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="liquid-glass border-b border-white/5 rounded-none">
+          <div className="max-w-[1200px] mx-auto px-6 py-4 flex items-center gap-3">
             <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm"
               style={{
-                display: "flex",
-                flex: 1,
-                minWidth: 280,
-                background: "#111119",
-                border: "1px solid #2a2a3e",
-                borderRadius: 8,
-                overflow: "hidden",
+                background: "linear-gradient(135deg, #7c3aed, #2563eb)",
+                boxShadow: "0 4px 15px rgba(124, 58, 237, 0.3)",
               }}
             >
-              <input
-                value={username}
-                onChange={(e) => {
-                  let val = e.target.value.toLowerCase().replace(/\s/g, "");
-                  if (val.includes("@")) {
-                    val = val.split("@")[0];
-                  }
-                  setUsername(val);
-                  setEmails([]);
-                  prevCountRef.current = 0;
-                }}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M22 7l-10 7L2 7"/>
+              </svg>
+            </div>
+            <span className="text-lg font-semibold tracking-tight text-white/90">
+              Temp<span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Mail</span>
+            </span>
+            <div className="ml-auto flex items-center gap-3">
+              <span className="text-[11px] text-white/25 font-mono">
+                {lastRefresh ? `synced ${timeAgo(lastRefresh.toISOString())}` : "connecting..."}
+              </span>
+              <div
+                className="w-2 h-2 rounded-full"
                 style={{
-                  flex: 1,
-                  padding: "10px 14px",
-                  background: "transparent",
-                  border: "none",
-                  outline: "none",
-                  color: "#e8e8f0",
-                  fontSize: 15,
-                  fontFamily: "'IBM Plex Mono', monospace",
+                  background: loading ? "#facc15" : "#22c55e",
+                  boxShadow: loading ? "0 0 8px #facc15" : "0 0 8px #22c55e",
+                  animation: loading ? "breathe 1.5s ease-in-out infinite" : "none",
                 }}
-                placeholder="username"
               />
-              <span
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-[1200px] mx-auto px-6 py-8">
+          {/* Email address bar */}
+          <div
+            className="liquid-glass p-6 mb-6"
+            style={{ animation: "slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both" }}
+          >
+            <div className="text-[11px] text-white/30 uppercase tracking-[3px] mb-4 font-medium">
+              Your temporary inbox
+            </div>
+            <div className="flex gap-3 items-center flex-wrap">
+              <div className="flex flex-1 min-w-[280px] liquid-glass-deep rounded-xl overflow-hidden">
+                <input
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value.toLowerCase().replace(/\s/g, ""));
+                    setEmails([]);
+                    prevCountRef.current = 0;
+                  }}
+                  className="flex-1 px-4 py-3 bg-transparent border-none outline-none text-white/90 text-[15px] font-mono placeholder:text-white/20"
+                  placeholder="username"
+                />
+                <span className="px-4 py-3 text-white/30 text-sm border-l border-white/5 flex items-center font-mono">
+                  @{DOMAIN}
+                </span>
+              </div>
+              <button
+                onClick={copy}
+                className="px-5 py-3 rounded-xl text-[13px] font-medium transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
                 style={{
-                  padding: "10px 14px",
-                  color: "#555",
-                  fontSize: 14,
-                  borderLeft: "1px solid #2a2a3e",
-                  display: "flex",
-                  alignItems: "center",
+                  background: copied ? "rgba(34, 197, 94, 0.15)" : "rgba(255, 255, 255, 0.04)",
+                  border: `1px solid ${copied ? "rgba(34, 197, 94, 0.3)" : "rgba(255, 255, 255, 0.08)"}`,
+                  color: copied ? "#4ade80" : "rgba(255, 255, 255, 0.6)",
+                  boxShadow: copied ? "0 0 20px rgba(34, 197, 94, 0.1)" : "none",
                 }}
               >
-                @{DOMAIN}
-              </span>
-            </div>
-            <button
-              className="btn"
-              onClick={copy}
-              style={{
-                padding: "10px 18px",
-                borderRadius: 8,
-                border: "none",
-                background: copied ? "#166534" : "#1e1e2e",
-                color: copied ? "#4ade80" : "#a0a0b8",
-                fontSize: 13,
-              }}
-            >
-              {copied ? "✓ Copied" : "Copy"}
-            </button>
-            <button
-              className="btn"
-              onClick={generate}
-              style={{
-                padding: "10px 18px",
-                borderRadius: 8,
-                border: "none",
-                background: "#1e1e2e",
-                color: "#a0a0b8",
-                fontSize: 13,
-              }}
-            >
-              ⟳ New
-            </button>
-            <button
-              className="btn"
-              onClick={() => fetchInbox()}
-              style={{
-                padding: "10px 18px",
-                borderRadius: 8,
-                border: "none",
-                background: "#1d2a1d",
-                color: "#4ade80",
-                fontSize: 13,
-              }}
-            >
-              Refresh
-            </button>
-          </div>
-        </div>
-
-        {/* New mail notification */}
-        {newCount > 0 && (
-          <div
-            style={{
-              background: "#1a1a2e",
-              border: "1px solid #7c3aed",
-              borderRadius: 8,
-              padding: "10px 16px",
-              marginBottom: 16,
-              fontSize: 13,
-              color: "#a78bfa",
-              animation: "slideIn 0.3s ease",
-            }}
-          >
-            ✨ {newCount} new email{newCount > 1 ? "s" : ""} arrived!
-          </div>
-        )}
-
-        {/* Main content */}
-        {emails.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "80px 24px",
-              border: "1px dashed #1e1e2e",
-              borderRadius: 12,
-              animation: "fadeIn 0.5s ease",
-            }}
-          >
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
-            <div style={{ color: "#444", fontSize: 14, lineHeight: 1.8 }}>
-              Inbox is empty
-              <br />
-              <span style={{ fontSize: 12, color: "#333" }}>
-                Auto-refreshing every 10 seconds...
-              </span>
+                {copied ? "✓ Copied" : "Copy"}
+              </button>
+              <button
+                onClick={generate}
+                className="px-5 py-3 rounded-xl text-[13px] font-medium transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
+                style={{
+                  background: "rgba(255, 255, 255, 0.04)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  color: "rgba(255, 255, 255, 0.6)",
+                }}
+              >
+                ⟳ New
+              </button>
+              <button
+                onClick={() => fetchInbox()}
+                className="px-5 py-3 rounded-xl text-[13px] font-medium transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
+                style={{
+                  background: "linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(37, 99, 235, 0.15))",
+                  border: "1px solid rgba(124, 58, 237, 0.2)",
+                  color: "#a78bfa",
+                  boxShadow: "0 0 20px rgba(124, 58, 237, 0.05)",
+                }}
+              >
+                Refresh
+              </button>
             </div>
           </div>
-        ) : (
-          <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-            {/* Email list */}
-            <div style={{ width: 320, flexShrink: 0 }}>
-              {emails.map((e, i) => (
-                <div
-                  key={e.id}
-                  className="email-row"
-                  onClick={() => handleSelect(e)}
-                  style={{
-                    padding: "14px 16px",
-                    marginBottom: 6,
-                    borderRadius: 8,
-                    border: "1px solid",
-                    borderColor: selected?.id === e.id ? "#7c3aed" : "#1a1a2a",
-                    background: selected?.id === e.id ? "#13101f" : "#0d0d14",
-                    animation: `slideIn 0.2s ease ${i * 0.05}s both`,
-                    transition: "border-color 0.15s",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: "#e8e8f0",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {e.subject || "(no subject)"}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "#555",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {e.from}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#3a3a5a", marginTop: 4 }}>
-                    {timeAgo(e.date)}
-                  </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Email detail */}
+          {/* New mail notification */}
+          {newCount > 0 && (
             <div
+              className="liquid-glass mb-4 px-5 py-3 text-[13px] text-purple-300"
               style={{
-                flex: 1,
-                background: "#0d0d14",
-                border: "1px solid #1a1a2a",
-                borderRadius: 12,
-                padding: 24,
-                minHeight: 320,
-                animation: "fadeIn 0.2s ease",
+                animation: "slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) both",
+                borderColor: "rgba(124, 58, 237, 0.3)",
+                background: "rgba(124, 58, 237, 0.08)",
               }}
             >
-              {selected ? (
-                <>
+              <span className="inline-block animate-pulse mr-2">●</span>
+              {newCount} new email{newCount > 1 ? "s" : ""} arrived
+            </div>
+          )}
+
+          {/* Main content */}
+          {emails.length === 0 ? (
+            <div
+              className="liquid-glass text-center py-20 px-6"
+              style={{ animation: "fadeIn 0.6s ease both 0.2s" }}
+            >
+              <div
+                className="text-5xl mb-5"
+                style={{ animation: "float 4s ease-in-out infinite" }}
+              >
+                ✉
+              </div>
+              <div className="text-white/25 text-sm leading-relaxed">
+                Inbox is empty
+                <br />
+                <span className="text-white/15 text-xs">
+                  Auto-refreshing every 10 seconds...
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-4 items-start">
+              {/* Email list */}
+              <div className="w-[340px] flex-shrink-0 space-y-2">
+                {emails.map((e, i) => (
                   <div
+                    key={e.id}
+                    onClick={() => handleSelect(e)}
+                    className="liquid-glass-deep p-4 cursor-pointer transition-all duration-300 hover:translate-x-1"
                     style={{
-                      borderBottom: "1px solid #1a1a2a",
-                      paddingBottom: 16,
-                      marginBottom: 20,
+                      animation: `slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) ${i * 0.08}s both`,
+                      borderColor: selected?.id === e.id ? "rgba(124, 58, 237, 0.4)" : undefined,
+                      background: selected?.id === e.id ? "rgba(124, 58, 237, 0.08)" : undefined,
+                      boxShadow: selected?.id === e.id ? "0 0 30px rgba(124, 58, 237, 0.08), inset 0 1px 0 rgba(255,255,255,0.05)" : undefined,
                     }}
                   >
-                    <h2
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 600,
-                        color: "#e8e8f0",
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        marginBottom: 10,
-                      }}
-                    >
-                      {selected.subject || "(no subject)"}
-                    </h2>
-                    <div
-                      style={{ fontSize: 12, color: "#555", lineHeight: 1.8 }}
-                    >
-                      <span style={{ color: "#3a3a5a" }}>FROM </span>
-                      <span style={{ color: "#7c7c9a" }}>{selected.from}</span>
-                      <br />
-                      <span style={{ color: "#3a3a5a" }}>TIME </span>
-                      <span style={{ color: "#7c7c9a" }}>
-                        {new Date(selected.date).toLocaleString("vi-VN")}
-                      </span>
+                    <div className="text-[13px] font-medium text-white/85 truncate mb-1.5">
+                      {e.subject || "(no subject)"}
+                    </div>
+                    <div className="text-[11px] text-white/30 truncate">
+                      {e.from}
+                    </div>
+                    <div className="text-[11px] text-white/15 mt-2">
+                      {timeAgo(e.date)}
                     </div>
                   </div>
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                      fontSize: 13,
-                      lineHeight: 1.8,
-                      color: "#b0b0c8",
-                      fontFamily: "'IBM Plex Mono', monospace",
-                    }}
-                  >
-                    {parseBody(selected.body)}
-                  </pre>
-                </>
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: 200,
-                    color: "#2a2a3e",
-                    fontSize: 13,
-                  }}
-                >
-                  ← Select an email to read
-                </div>
-              )}
+                ))}
+              </div>
+
+              {/* Email detail */}
+              <div
+                className="flex-1 liquid-glass p-6 min-h-[360px]"
+                style={{ animation: "fadeIn 0.4s ease both" }}
+              >
+                {selected ? (
+                  <div style={{ animation: "fadeIn 0.3s ease both" }}>
+                    <div className="border-b border-white/5 pb-5 mb-6">
+                      <h2 className="text-[17px] font-semibold text-white/90 mb-3">
+                        {selected.subject || "(no subject)"}
+                      </h2>
+                      <div className="text-[12px] text-white/30 space-y-1.5">
+                        <div>
+                          <span className="text-white/20 uppercase tracking-wider text-[10px]">From </span>
+                          <span className="text-white/50">{selected.from}</span>
+                        </div>
+                        <div>
+                          <span className="text-white/20 uppercase tracking-wider text-[10px]">Time </span>
+                          <span className="text-white/50">
+                            {new Date(selected.date).toLocaleString("vi-VN")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <pre className="whitespace-pre-wrap break-words text-[13px] leading-[1.9] text-white/60 font-mono">
+                      {parseBody(selected.body)}
+                    </pre>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[240px] text-white/15 text-sm">
+                    Select an email to read
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </main>
       </div>
     </div>
   );
